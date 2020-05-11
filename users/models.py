@@ -14,6 +14,7 @@ class User(AbstractUser):
     level = models.IntegerField(null=True, blank=True, default=0)
     phone = models.PositiveIntegerField(null=True, blank=True)
 
+
     def __str__(self):
         return self.username
 

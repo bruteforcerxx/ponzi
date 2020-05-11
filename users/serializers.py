@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import User    
+from .models import User 
+from ponzi.settings import AUTH_USER_MODEL   
 
 class UserSerializer(serializers.ModelSerializer):
     referrer = serializers.SerializerMethodField()
