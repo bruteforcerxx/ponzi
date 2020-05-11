@@ -1,13 +1,16 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.utils.translation import ugettext_lazy as _
+from ponzi.settings import AUTH_USER_MODEL
+from rest_framework import serializers
 
 # Create your models here.
 class User(AbstractUser):
     email = models.EmailField(max_length=254, unique=True)
-    referrer_id = models.IntegerField(default=0, blank=True, null=True)
+    referrer = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    # referrer_id = models.IntegerField(default=0, blank=True, null=True)
     wallet_address = models.CharField(max_length=200, blank=True, null=True, unique=True)
     to_wallet = models.CharField(max_length=200, blank=True, null=True)
+    balance = models.PositiveIntegerField(default=0)
     level = models.IntegerField(null=True, blank=True, default=0)
     phone = models.PositiveIntegerField(null=True, blank=True)
 
@@ -15,9 +18,26 @@ class User(AbstractUser):
         return self.username
 
     def get_referrer(self):
-        referrer = User.objects.get(id = self.referrer_id)
+        try:
+            user = User.objects.get(id = self.referrer.id)
+            referrer = {
+                'id': user.id,
+                'username': user.username,
+                'level': user.level
+            }
+        except:
+            referrer = 'null'
         return referrer
 
     def get_downlines(self):
-        downlines = User.objects.filter(referrer_id = self.id)
-        return downlines
+        downlines = User.objects.filter(referrer = self)
+        data = []
+        for user in downlines:
+            data.append({
+                'id': user.id,
+                'username': user.username,
+                'level': user.level,
+                # 'downlines': user.get_downlines(),
+                # 'referrer': user.get_referrer()
+            })
+        return data
