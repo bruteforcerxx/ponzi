@@ -8,7 +8,7 @@ class UserSerializer(serializers.ModelSerializer):
     downlines = serializers.SerializerMethodField()
     class Meta:
         model = User
-        exclude = ['groups', 'is_staff', 'user_permissions']
+        exclude = ['groups', 'is_staff', 'user_permissions', 'password']
         # depth = 1
         # fields = ['email', 'username', 'referrer_id']
 

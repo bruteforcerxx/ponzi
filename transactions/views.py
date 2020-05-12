@@ -7,12 +7,16 @@ from .serializers import TransactionSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from decimal import Decimal
-from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
 # Create your views here.
 class ListCreateTransactions(generics.ListCreateAPIView):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
+
+    def perform_create(self, serializer):
+        user = User.objects.get(id=self.request.data['by'])
+        serializer.save(by=user)
 
 # class CoinbaseNotification(APIView):
 #     def get(self, request):
@@ -21,6 +25,12 @@ class ListCreateTransactions(generics.ListCreateAPIView):
     
 #     def post(self, request, format=None):
 #         print(request)
+
+class TransactionCreate(APIView):
+    def post(self, request, format=None):
+        serializer = TransactionSerializer(data=request.data)
+        return Response({'method': request.data})
+
 @api_view(['GET', 'POST'])
 def CoinbaseNotification(request):
     """
@@ -62,3 +72,20 @@ def CoinbaseNotification(request):
             except User.DoesNotExist:
                 return Response({'error': 'Sending user not found'}, status=HTTP_200_OK)
         return Response(status=HTTP_200_OK)
+
+class TransactionDetails(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Transaction.objects.all()
+    serializer_class = TransactionSerializer
+
+
+class UserTransactions(generics.ListCreateAPIView):
+    serializer_class = TransactionSerializer
+    def get_queryset(self):
+        user_id = self.request.GET.get('user_id', '')
+        user = User.objects.get(id=user_id)
+        queryset = Transaction.objects.filter(by=user)
+        return queryset
+    
+    
+    def handle_exception(self, exc):
+        return Response({'error': str(exc)})
