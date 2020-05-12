@@ -3,10 +3,21 @@ from users.models import User
 from django.utils import timezone
 
 # Create your models here.
-CHOICES = [
+STATUS_CHOICES = [
     ('pending', 'pending'),
     ('complete', 'successful'),
     ('failed', 'failed')
+]
+
+TYPE_CHOICES = [
+    ('debit', 'debit'),
+    ('credit', 'credit')
+]
+
+SUMMARY_CHOICES = [
+    ('transfer', 'transfer'),
+    ('deposit', 'deposit'),
+    ('withdrawal', 'withdrawal')
 ]
 
 class Transaction(models.Model):
@@ -14,10 +25,11 @@ class Transaction(models.Model):
     date = models.DateTimeField(default = timezone.now)
     tx_hash = models.CharField(max_length=400)
     amount = models.IntegerField()
-    type = models.CharField(max_length=250)
+    type = models.CharField(max_length=250, choices=SUMMARY_CHOICES)
+    summary = models.CharField(max_length=250, choices=SUMMARY_CHOICES)
     description = models.CharField(max_length=250, blank=True, null=True)
     to = models.CharField(max_length=250, blank=True, null=True)
-    status = models.CharField(max_length=200, choices=CHOICES, default='pending')
+    status = models.CharField(max_length=200, choices=STATUS_CHOICES, default='pending')
 
     def __str__(self):
         return self.tx_hash

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import User 
 from ponzi.settings import AUTH_USER_MODEL   
+from djoser.serializers import UserCreateSerializer as BaseUserRegistrationSerializer
 
 class UserSerializer(serializers.ModelSerializer):
     referrer = serializers.SerializerMethodField()
@@ -36,3 +37,8 @@ class UserSerializer(serializers.ModelSerializer):
         #     })
         return obj.get_downlines()
             
+
+
+class UserRegistrationSerializer(BaseUserRegistrationSerializer):
+    class Meta(BaseUserRegistrationSerializer.Meta):
+        fields = ( 'password', )
