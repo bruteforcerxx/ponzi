@@ -8,6 +8,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from decimal import Decimal
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from decimal import Decimal
+from rest_framework.exceptions import ValidationError
 
 # Create your views here.
 class ListCreateTransactions(generics.ListCreateAPIView):
@@ -16,6 +18,16 @@ class ListCreateTransactions(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         user = User.objects.get(id=self.request.data['by'])
+        type = self.request.data['type']
+        amount = Decimal(self.request.data['amount'])
+        if type == 'credit':
+            user.balance += amount
+        elif type == 'debit':
+            # transaction type is debit
+            if Decimal(user.balance) < amount:
+                raise ValidationError({'error': 'Insufficient funds'})
+            user.balance -= amount
+        user.save()
         serializer.save(by=user)
 
 # class CoinbaseNotification(APIView):
@@ -25,11 +37,6 @@ class ListCreateTransactions(generics.ListCreateAPIView):
     
 #     def post(self, request, format=None):
 #         print(request)
-
-class TransactionCreate(APIView):
-    def post(self, request, format=None):
-        serializer = TransactionSerializer(data=request.data)
-        return Response({'method': request.data})
 
 @api_view(['GET', 'POST'])
 def CoinbaseNotification(request):
@@ -74,11 +81,17 @@ def CoinbaseNotification(request):
         return Response(status=HTTP_200_OK)
 
 class TransactionDetails(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Returns a transaction's details, updates and deletes it
+    """
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
 
 
-class UserTransactions(generics.ListCreateAPIView):
+class UserTransactions(generics.ListAPIView):
+    """
+    Returns all transactions, debit and credit, performed by user
+    """
     serializer_class = TransactionSerializer
     def get_queryset(self):
         user_id = self.request.GET.get('user_id', '')
@@ -86,6 +99,36 @@ class UserTransactions(generics.ListCreateAPIView):
         queryset = Transaction.objects.filter(by=user)
         return queryset
     
-    
+
     def handle_exception(self, exc):
-        return Response({'error': str(exc)})
+        return Response({'error': str(exc)}, status=HTTP_400_BAD_REQUEST)
+
+
+class UserCreditTransactions(generics.ListAPIView):
+    """
+    Returns all credit transaction done by user
+    """
+    serializer_class = TransactionSerializer
+    def get_queryset(self):
+        user_id = self.request.GET.get('user_id', '')
+        user = User.objects.get(id=user_id)
+        queryset = Transaction.objects.filter(by=user, type='credit')
+        return queryset
+        
+    def handle_exception(self, exc):
+        return Response({'error': str(exc)}, status=HTTP_400_BAD_REQUEST)
+
+
+class UserDebitTransactions(generics.ListAPIView):
+    """
+    Returns all debit transaction done by user
+    """
+    serializer_class = TransactionSerializer
+    def get_queryset(self):
+        user_id = self.request.GET.get('user_id', '')
+        user = User.objects.get(id=user_id)
+        queryset = Transaction.objects.filter(by=user, type='debit')
+        return queryset
+        
+    def handle_exception(self, exc):
+        return Response({'error': str(exc)}, status=HTTP_400_BAD_REQUEST)
