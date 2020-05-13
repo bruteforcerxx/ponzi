@@ -176,3 +176,12 @@ def COinbaseWalletCreate(request):
     except User.DoesNotExist:
         return Response({'error': 'User with given id "%s" does not exist' % for_user}, status=status.HTTP_404_NOT_FOUND)
 
+
+@api_view(['GET'])
+def GetCoinbaseNotifications(request):
+    API_KEY = os.environ['COINBASE_API_KEY']
+    API_SECRET = os.environ['COINBASE_API_SERCRET']
+    ACCOUNT_ID = os.environ['COINBASE_ACCOUNT_ID']
+    client = Client(API_KEY, API_SECRET)
+    notifications = client.get_transactions(ACCOUNT_ID)
+    return Response(notifications)
