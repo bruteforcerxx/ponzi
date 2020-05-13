@@ -22,7 +22,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'qiydhtkoi$gbb1z*sh1zizj)2=l_4xe$gm&1w(0r%(o%-5pbvp'
+SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -164,3 +164,7 @@ DJOSER = {
         'current_user': 'users.serializers.UserSerializer',
     }
 }
+
+
+import django_heroku
+django_heroku.settings(locals())
