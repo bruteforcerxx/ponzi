@@ -9,7 +9,7 @@ urlpatterns = [
     path('transactions/user/', UserTransactions.as_view()),
     path('transactions/user/credits/', UserCreditTransactions.as_view()),
     path('transactions/user/debits/', UserDebitTransactions.as_view()),
-    path('coinbase/', CoinbaseNotification),
+    path('coinbase_notifications/', CoinbaseNotification),
     path('wallet_create/', COinbaseWalletCreate),
     path('notifications_list', GetCoinbaseNotifications)
 ]
