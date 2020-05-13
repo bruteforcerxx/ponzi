@@ -180,4 +180,4 @@ def GetCoinbaseNotifications(request):
     ACCOUNT_ID = os.environ['COINBASE_ACCOUNT_ID']
     client = Client(API_KEY, API_SECRET)
     notifications = client.get_notifications()
-    return Response(notifications)
+    return Response(notifications, status=status.HTTP_200_OK)
