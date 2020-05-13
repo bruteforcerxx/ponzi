@@ -11,7 +11,8 @@ def get_referral_code(stringLength=8):
 
 # Create your models here.
 class User(AbstractUser):
-    email = models.EmailField(max_length=254, unique=True)referral_code = models.CharField(max_length=100, default=get_referral_code(), unique=True) #code for referring others
+    email = models.EmailField(max_length=254, unique=True)
+    referral_code = models.CharField(max_length=100, default=get_referral_code(), unique=True) #code for referring others
     referrer_code = models.CharField(max_length=100, null=True, blank=True) #code of the person who referred the user
     wallet_address = models.CharField(max_length=200, blank=True, null=True, unique=True)
     to_wallet = models.CharField(max_length=200, blank=True, null=True, unique=True)
