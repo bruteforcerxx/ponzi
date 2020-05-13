@@ -104,10 +104,6 @@ def CoinbaseNotification(request):
     """
     Retrieve, update or delete a code snippet.
     """
-    # try:
-    #     snippet = Snippet.objects.get(pk=pk)
-    # except Snippet.DoesNotExist:
-    #     return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         # serializer = SnippetSerializer(snippet)
@@ -183,5 +179,5 @@ def GetCoinbaseNotifications(request):
     API_SECRET = os.environ['COINBASE_API_SERCRET']
     ACCOUNT_ID = os.environ['COINBASE_ACCOUNT_ID']
     client = Client(API_KEY, API_SECRET)
-    notifications = client.get_transactions(ACCOUNT_ID)
+    notifications = client.get_notifications()
     return Response(notifications)
