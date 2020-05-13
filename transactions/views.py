@@ -7,9 +7,13 @@ from .serializers import TransactionSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from decimal import Decimal
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from rest_framework import status
 from decimal import Decimal
 from rest_framework.exceptions import ValidationError
+from coinbase.wallet.client import Client
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Create your views here.
 class ListCreateTransactions(generics.ListCreateAPIView):
@@ -37,6 +41,63 @@ class ListCreateTransactions(generics.ListCreateAPIView):
     
 #     def post(self, request, format=None):
 #         print(request)
+
+
+class TransactionDetails(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Returns a transaction's details, updates and deletes it
+    """
+    queryset = Transaction.objects.all()
+    serializer_class = TransactionSerializer
+
+
+class UserTransactions(generics.ListAPIView):
+    """
+    Returns all transactions, debit and credit, performed by user
+    """
+    serializer_class = TransactionSerializer
+    def get_queryset(self):
+        user_id = self.request.GET.get('user_id', '')
+        user = User.objects.get(id=user_id)
+        queryset = Transaction.objects.filter(by=user)
+        return queryset
+    
+
+    def handle_exception(self, exc):
+        return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserCreditTransactions(generics.ListAPIView):
+    """
+    Returns all credit transaction done by user
+    """
+    serializer_class = TransactionSerializer
+    def get_queryset(self):
+        user_id = self.request.GET.get('user_id', '')
+        user = User.objects.get(id=user_id)
+        queryset = Transaction.objects.filter(by=user, type='credit')
+        return queryset
+        
+    def handle_exception(self, exc):
+        return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserDebitTransactions(generics.ListAPIView):
+    """
+    Returns all debit transaction done by user
+    """
+    serializer_class = TransactionSerializer
+    def get_queryset(self):
+        user_id = self.request.GET.get('user_id', '')
+        user = User.objects.get(id=user_id)
+        queryset = Transaction.objects.filter(by=user, type='debit')
+        return queryset
+        
+    def handle_exception(self, exc):
+        return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 
 @api_view(['GET', 'POST'])
 def CoinbaseNotification(request):
@@ -75,60 +136,43 @@ def CoinbaseNotification(request):
                     user.save()
                     transaction.save()
                 else:
-                    return Response({'error': 'currency is not BTC'}, status=HTTP_200_OK)
+                    return Response({'error': 'currency is not BTC'}, status=status.HTTP_200_OK)
             except User.DoesNotExist:
-                return Response({'error': 'Sending user not found'}, status=HTTP_200_OK)
-        return Response(status=HTTP_200_OK)
-
-class TransactionDetails(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Returns a transaction's details, updates and deletes it
-    """
-    queryset = Transaction.objects.all()
-    serializer_class = TransactionSerializer
+                return Response({'error': 'Sending user not found'}, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
 
 
-class UserTransactions(generics.ListAPIView):
+@api_view(['POST'])
+def COinbaseWalletCreate(request):
     """
-    Returns all transactions, debit and credit, performed by user
+    Endpoint for creating wallet address for user to deposit bitcoin to
     """
-    serializer_class = TransactionSerializer
-    def get_queryset(self):
-        user_id = self.request.GET.get('user_id', '')
-        user = User.objects.get(id=user_id)
-        queryset = Transaction.objects.filter(by=user)
-        return queryset
     
+    for_user = request.POST.get('user_id', '') #get id for user who should own the wallet address
+    if for_user == '':
+        return Response({'error': 'user_id missing in request data'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        user = User.objects.get(id = for_user)
+        API_KEY = os.environ['COINBASE_API_KEY']
+        API_SECRET = os.environ['COINBASE_API_SERCRET']
+        ACCOUNT_ID = os.environ['COINBASE_ACCOUNT_ID']
+        client = Client(API_KEY, API_SECRET)
+        try:
+            address = client.create_address(ACCOUNT_ID)['address'] #get address value of newly created address
+            user.to_wallet = address
+            user.save()
+            return Response({
+            'user':{
+                'id': user.id,
+                'email': user.email,
+                'username': user.username,
+                'to_wallet': user.to_wallet,
+                'balance': user.balance
+            },
+            'address': address
+        }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_408_REQUEST_TIMEOUT)
+    except User.DoesNotExist:
+        return Response({'error': 'User with given id "%s" does not exist' % for_user}, status=status.HTTP_404_NOT_FOUND)
 
-    def handle_exception(self, exc):
-        return Response({'error': str(exc)}, status=HTTP_400_BAD_REQUEST)
-
-
-class UserCreditTransactions(generics.ListAPIView):
-    """
-    Returns all credit transaction done by user
-    """
-    serializer_class = TransactionSerializer
-    def get_queryset(self):
-        user_id = self.request.GET.get('user_id', '')
-        user = User.objects.get(id=user_id)
-        queryset = Transaction.objects.filter(by=user, type='credit')
-        return queryset
-        
-    def handle_exception(self, exc):
-        return Response({'error': str(exc)}, status=HTTP_400_BAD_REQUEST)
-
-
-class UserDebitTransactions(generics.ListAPIView):
-    """
-    Returns all debit transaction done by user
-    """
-    serializer_class = TransactionSerializer
-    def get_queryset(self):
-        user_id = self.request.GET.get('user_id', '')
-        user = User.objects.get(id=user_id)
-        queryset = Transaction.objects.filter(by=user, type='debit')
-        return queryset
-        
-    def handle_exception(self, exc):
-        return Response({'error': str(exc)}, status=HTTP_400_BAD_REQUEST)

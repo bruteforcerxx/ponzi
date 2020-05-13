@@ -1,5 +1,7 @@
 from django.urls import path
-from .views import UserDebitTransactions, UserCreditTransactions, ListCreateTransactions, CoinbaseNotification, TransactionDetails, UserTransactions
+from .views import (UserDebitTransactions, COinbaseWalletCreate,
+UserCreditTransactions, ListCreateTransactions, 
+CoinbaseNotification, TransactionDetails, UserTransactions)
 
 urlpatterns = [
     path('transactions/', ListCreateTransactions.as_view()),
@@ -7,5 +9,6 @@ urlpatterns = [
     path('transactions/user/', UserTransactions.as_view()),
     path('transactions/user/credits/', UserCreditTransactions.as_view()),
     path('transactions/user/debits/', UserDebitTransactions.as_view()),
-    path('coinbase/', CoinbaseNotification)
+    path('coinbase/', CoinbaseNotification),
+    path('wallet_create/', COinbaseWalletCreate)
 ]
