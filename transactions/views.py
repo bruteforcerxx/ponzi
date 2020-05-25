@@ -139,7 +139,7 @@ def CoinbaseNotification(request):
 
 
 @api_view(['POST'])
-def COinbaseWalletCreate(request):
+def CoinbaseWalletCreate(request):
     """
     Endpoint for creating wallet address for user to deposit bitcoin to
     """
@@ -179,5 +179,5 @@ def GetCoinbaseNotifications(request):
     API_SECRET = os.environ['COINBASE_API_SERCRET']
     ACCOUNT_ID = os.environ['COINBASE_ACCOUNT_ID']
     client = Client(API_KEY, API_SECRET)
-    notifications = client.get_notifications()
+    notifications = client.get_transactions(ACCOUNT_ID)
     return Response(notifications, status=status.HTTP_200_OK)
