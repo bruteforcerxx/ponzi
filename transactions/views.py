@@ -12,8 +12,14 @@ from decimal import Decimal
 from rest_framework.exceptions import ValidationError
 from coinbase.wallet.client import Client
 import os
+import time
+import json
 from dotenv import load_dotenv
+import requests
+from threading import Thread
+from .funding_manager_luno import funding_manager_luno 
 load_dotenv()
+from .send_to_luno import send_to_luno
 
 # Create your views here.
 class ListCreateTransactions(generics.ListCreateAPIView):
@@ -149,13 +155,33 @@ def CoinbaseWalletCreate(request):
         return Response({'error': 'user_id missing in request data'}, status=status.HTTP_400_BAD_REQUEST)
     try:
         user = User.objects.get(id = for_user)
-        API_KEY = os.environ['COINBASE_API_KEY']
-        API_SECRET = os.environ['COINBASE_API_SERCRET']
-        ACCOUNT_ID = os.environ['COINBASE_ACCOUNT_ID']
-        client = Client(API_KEY, API_SECRET)
+        get_id = open('jsons/coinbase_funded_keys.json', 'r')
+        id = json.load(get_id)
+        get_id.close()
+
+        use_id = id[0]
+        secret = use_id[0]
+        cb_key = use_id[1]
+        cb_id = use_id[2]
+
+        client = Client(cb_key, secret)
         try:
-            address = client.create_address(ACCOUNT_ID)['address'] #get address value of newly created address
+            address = client.create_address(cb_id)['address'] #get address value of newly created address
             user.to_wallet = address
+
+            pending = open('jsons/addresses.json', 'r')
+            public_ads = json.load(pending)
+            pending.close()
+            for element in public_ads:
+                if element[1] == user.email:
+                    print(element)
+                    del(public_ads[public_ads.index(element)])
+
+            public_ads.append([address, user.email])
+
+            pending = open('jsons/addresses.json', 'w')
+            json.dump(public_ads, pending)
+            pending.close()
             user.save()
             return Response({
             'user':{
@@ -181,3 +207,16 @@ def GetCoinbaseNotifications(request):
     client = Client(API_KEY, API_SECRET)
     notifications = client.get_transactions(ACCOUNT_ID)
     return Response(notifications, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def WIthdrawToLuno(request):
+    for_user = request.POST.get('user_id', '')
+    amount = request.POST.get('amount', '')
+    address = request.POST.get('address', '')
+
+    send_to_luno(for_user, amount, address, '')
+    return Response({'data': 'Transaction complete'}, status=status.HTTP_200_OK)
+
+
+
