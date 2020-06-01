@@ -39,8 +39,14 @@ def balanceLuno():
       luno_balance = Decimal(luno_balance)
       while luno_balance < total_amount:
         time.sleep(3) #15 minutes
+        payload = {'asset': 'XBT'}
+        r = requests.get('https://api.mybitx.com/api/1/balance', params=payload)
         rs = requests.get(r.url, auth=(os.environ['LUNO_KEY_ID'], os.environ['LUNO_SECRET_KEY'])).json()
-        luno_balance = Decimal(rs['balance'][0]['balance'])
+        print(rs)
+        luno_total_balance = rs['balance'][0]['balance']
+        luno_reserve_balance = rs['balance'][0]['reserved']
+        luno_balance = Decimal(luno_total_balance) - Decimal(luno_reserve_balance)
+        print(luno_balance)
     else: 
       pass
 
