@@ -5,7 +5,7 @@ from django.utils import timezone
 # Create your models here.
 STATUS_CHOICES = [
     ('pending', 'pending'),
-    ('complete', 'successful'),
+    ('complete', 'complete'),
     ('failed', 'failed')
 ]
 
@@ -20,6 +20,11 @@ SUMMARY_CHOICES = [
     ('withdrawal', 'withdrawal')
 ]
 
+SERVICE_CHOICES = [
+    ('luno', 'luno'),
+    ('coinbase', 'coinbase')
+]
+
 class Transaction(models.Model):
     by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     date = models.DateTimeField(default = timezone.now)
@@ -28,8 +33,9 @@ class Transaction(models.Model):
     type = models.CharField(max_length=250, choices=TYPE_CHOICES)
     summary = models.CharField(max_length=250, choices=SUMMARY_CHOICES)
     description = models.CharField(max_length=250, blank=True, null=True)
-    to = models.CharField(max_length=250, blank=True, null=True)
-    status = models.CharField(max_length=200, choices=STATUS_CHOICES, default='pending')
+    to = models.CharField(max_length=250)
+    status = models.CharField(max_length=200, choices=STATUS_CHOICES, default='complete')
+    service = models.CharField(max_length=100, choices=SERVICE_CHOICES)
 
 
     def __str__(self):

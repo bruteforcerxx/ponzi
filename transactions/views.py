@@ -20,6 +20,8 @@ from threading import Thread
 from .funding_manager_luno import funding_manager_luno 
 load_dotenv()
 from .send_to_luno import send_to_luno
+import string
+import random
 
 # Create your views here.
 class ListCreateTransactions(generics.ListCreateAPIView):
@@ -214,9 +216,32 @@ def WIthdrawToLuno(request):
     for_user = request.POST.get('user_id', '')
     amount = request.POST.get('amount', '')
     address = request.POST.get('address', '')
+    def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
+        return ''.join(random.choice(chars) for _ in range(size))
 
-    send_to_luno(for_user, amount, address, '')
-    return Response({'data': 'Transaction complete'}, status=status.HTTP_200_OK)
+    user = User.objects.get(id=for_user)
+    user.balance = Decimal(user.balance) - Decimal(amount)
+    transaction = Transaction()
+    transaction.by = user
+    transaction.tx_hash = id_generator()
+    transaction.amount = Decimal(amount)
+    transaction.summary = 'withdrawal'
+    transaction.type = 'debit'
+    transaction.description = "Withdrawal of %d %s made into %s's (%s) account" % (Decimal(amount), 'BTC', user.username, user.email)
+    transaction.status = 'pending'
+
+
+   
+   
+    return Response(send_to_luno(for_user, amount, address, '', x), status=status.HTTP_200_OK)
+  
+    # if response == 'success':
+    #     print(response)
+    #     return Response(response, status=status.HTTP_200_OK)
+         
+    # elif response == 'failed':
+    #     print(response)
+    #     return Response(response, status=status.HTTP_200_OK)
 
 
 
