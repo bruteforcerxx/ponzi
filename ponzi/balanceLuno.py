@@ -47,7 +47,7 @@ def balanceLuno():
         luno_reserve_balance = rs['balance'][0]['reserved']
         luno_balance = Decimal(luno_total_balance) - Decimal(luno_reserve_balance)
         print(luno_balance)
-    else: 
+    else:  
       pass
 
     #make payments
