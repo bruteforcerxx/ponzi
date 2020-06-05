@@ -42,13 +42,6 @@ class ListCreateTransactions(generics.ListCreateAPIView):
         user.save()
         serializer.save(by=user)
 
-# class CoinbaseNotification(APIView):
-#     def get(self, request):
-#         print(request)
-#         return Response({'hey': 'hey'})
-    
-#     def post(self, request, format=None):
-#         print(request)
 
 
 class TransactionDetails(generics.RetrieveUpdateDestroyAPIView):
@@ -227,21 +220,14 @@ def WIthdrawToLuno(request):
     transaction.amount = Decimal(amount)
     transaction.summary = 'withdrawal'
     transaction.type = 'debit'
-    transaction.description = "Withdrawal of %d %s made into %s's (%s) account" % (Decimal(amount), 'BTC', user.username, user.email)
+    description = "Withdrawal of %d %s made into %s's (%s) account" % (Decimal(amount), 'BTC', user.username, user.email)
+    transaction.description = description
     transaction.status = 'pending'
 
-
+    user.save()
+    transaction.save()
    
-   
-    return Response(send_to_luno(for_user, amount, address, '', x), status=status.HTTP_200_OK)
-  
-    # if response == 'success':
-    #     print(response)
-    #     return Response(response, status=status.HTTP_200_OK)
-         
-    # elif response == 'failed':
-    #     print(response)
-    #     return Response(response, status=status.HTTP_200_OK)
+    return Response(send_to_luno(for_user, amount, address, '', description), status=status.HTTP_200_OK)
 
 
 

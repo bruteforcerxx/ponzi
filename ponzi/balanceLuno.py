@@ -9,7 +9,6 @@ from decimal import Decimal
 from coinbase.wallet.client import Client
 
 def balanceLuno():
-  print('running')
   pending_luno_txs = Transaction.objects.filter(service='luno', status='pending', type='debit', summary='withdrawal')
   total_amount = 0
   if len(pending_luno_txs) > 0:
@@ -33,7 +32,6 @@ def balanceLuno():
       primary_account = client.get_primary_account()
       try:
         tx = primary_account.send_money(to=luno_address, amount=float(total_amount), currency='BTC')
-        print(tx)
       except Exception as e:
         print(str(e))
       luno_balance = Decimal(luno_balance)
@@ -64,4 +62,4 @@ def balanceLuno():
       else:
         pass
   else:
-    print('No pending withdrawals to settle')
+    pass

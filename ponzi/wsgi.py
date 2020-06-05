@@ -38,11 +38,9 @@ def run():
         time.sleep(3)
         try:
             balanceLuno()
-            print('PASS1')
         except Exception as e:
             print(e)
             balanceLuno()
-            print('pass2')
 
 
 thread_run = Thread(target=run)
